@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  traefik:
+    image: traefik:2.9
+    command: 
+        - --providers.docker=true
+        - --log.level=INFO
+        - --entryPoints.web.address=:8080
+
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+        - "8080:8080"
+
+  web:
+    build: .
+    # command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    container_name: test_app
+    volumes:
+      - .:/test_app
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.frontapp.service=front"
+        - "traefik.http.routers.frontapp.rule=Host(`localhost`)"
+        - "traefik.http.services.front.loadbalancer.server.port=5000"
